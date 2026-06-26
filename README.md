@@ -65,3 +65,11 @@ downloads/
   (e.g. `/` vs `/index.html`) may each be fetched once.
 - Only `<a href>`/`src` attributes are followed; JavaScript-rendered links are
   not discovered.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+Use responsibly: a license covers this code, not how you use it. Respect each
+site's `robots.txt`, Terms of Service, and the copyright of any content you
+download.

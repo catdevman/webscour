@@ -27,10 +27,12 @@ func TestRecursiveCrawl(t *testing.T) {
 		}
 	}
 
-	mux.HandleFunc("/", page(`<a href="/page2">2</a> <a href="/a.pdf">pdf</a>`))
+	// Pages also link to files whose extensions are NOT in the configured set
+	// (.zip, .docx, .png). These must never be written to disk.
+	mux.HandleFunc("/", page(`<a href="/page2">2</a> <a href="/a.pdf">pdf</a> <a href="/c.zip">zip</a> <a href="/d.docx">docx</a>`))
 	mux.HandleFunc("/page2", page(`<a href="/page3">3</a> <a href="/">home</a>`))
 	// page3 links back to page2 and to an off-domain site.
-	mux.HandleFunc("/page3", page(`<a href="/page2">2</a> <a href="https://example.com/x">ext</a> <a href="/b.pdf">pdf</a>`))
+	mux.HandleFunc("/page3", page(`<a href="/page2">2</a> <a href="https://example.com/x">ext</a> <a href="/b.pdf">pdf</a> <a href="/e.png">png</a>`))
 	mux.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	})
@@ -40,6 +42,18 @@ func TestRecursiveCrawl(t *testing.T) {
 	mux.HandleFunc("/b.pdf", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("%PDF-b"))
 	})
+
+	// Non-matching files: served with non-HTML content types so they are
+	// fetched as crawl candidates but discarded rather than downloaded.
+	binFile := func(ct, body string) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", ct)
+			w.Write([]byte(body))
+		}
+	}
+	mux.HandleFunc("/c.zip", binFile("application/zip", "PK-zip"))
+	mux.HandleFunc("/d.docx", binFile("application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx-bytes"))
+	mux.HandleFunc("/e.png", binFile("image/png", "png-bytes"))
 
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
@@ -81,5 +95,25 @@ func TestRecursiveCrawl(t *testing.T) {
 		if _, err := os.Stat(p); err != nil {
 			t.Errorf("expected downloaded file %s: %v", p, err)
 		}
+	}
+
+	// Non-matching extensions must not be written anywhere under the output dir.
+	for _, name := range []string{"c.zip", "d.docx", "e.png"} {
+		ext := filepath.Ext(name)[1:] // "zip", "docx", "png"
+		if _, err := os.Stat(filepath.Join(out, root, ext, name)); !os.IsNotExist(err) {
+			t.Errorf("non-matching file %s should not have been downloaded (err=%v)", name, err)
+		}
+	}
+
+	// Belt and suspenders: the only files on disk should be the two PDFs.
+	var got []string
+	filepath.Walk(out, func(path string, info os.FileInfo, err error) error {
+		if err == nil && !info.IsDir() {
+			got = append(got, filepath.Base(path))
+		}
+		return nil
+	})
+	if len(got) != 2 {
+		t.Errorf("expected exactly 2 files on disk (a.pdf, b.pdf), got %d: %v", len(got), got)
 	}
 }
