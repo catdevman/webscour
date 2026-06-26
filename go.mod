@@ -1,0 +1,8 @@
+module github.com/catdevman/webscour
+
+go 1.22
+
+require (
+	github.com/temoto/robotstxt v1.1.2
+	golang.org/x/net v0.27.0
+)
