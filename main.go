@@ -28,6 +28,13 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
+// Build metadata, injected at release time via -ldflags by GoReleaser.
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 func main() {
 	cfg, err := parseFlags()
 	if err != nil {
@@ -44,8 +51,8 @@ func main() {
 	root := registrableDomain(start.Host)
 
 	c := newCrawler(cfg, root)
-	log.Printf("starting crawl of %s (domain scope: %s, extensions: %s)",
-		start, root, strings.Join(cfg.exts, ", "))
+	log.Printf("webscour %s starting crawl of %s (domain scope: %s, extensions: %s)",
+		version, start, root, strings.Join(cfg.exts, ", "))
 
 	startTime := time.Now()
 	c.submit(start)
@@ -70,14 +77,20 @@ type config struct {
 
 func parseFlags() (config, error) {
 	var (
-		startURL = flag.String("url", "", "starting URL to crawl (required, absolute http/https)")
-		exts     = flag.String("ext", "pdf", "comma-separated file extensions to download, e.g. pdf,docx,zip")
-		workers  = flag.Int("workers", 16, "maximum number of concurrent in-flight HTTP requests")
-		outDir   = flag.String("out", "downloads", "output directory for downloaded files")
-		ua       = flag.String("ua", "webscour/1.0 (+https://github.com/catdevman/webscour)", "User-Agent header / robots.txt agent token")
-		timeout  = flag.Duration("timeout", 30*time.Second, "per-request HTTP timeout")
+		startURL    = flag.String("url", "", "starting URL to crawl (required, absolute http/https)")
+		exts        = flag.String("ext", "pdf", "comma-separated file extensions to download, e.g. pdf,docx,zip")
+		workers     = flag.Int("workers", 16, "maximum number of concurrent in-flight HTTP requests")
+		outDir      = flag.String("out", "downloads", "output directory for downloaded files")
+		ua          = flag.String("ua", "webscour/1.0 (+https://github.com/catdevman/webscour)", "User-Agent header / robots.txt agent token")
+		timeout     = flag.Duration("timeout", 30*time.Second, "per-request HTTP timeout")
+		showVersion = flag.Bool("version", false, "print version information and exit")
 	)
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("webscour %s (commit %s, built %s)\n", version, commit, date)
+		os.Exit(0)
+	}
 
 	if strings.TrimSpace(*startURL) == "" {
 		return config{}, fmt.Errorf("-url is required")

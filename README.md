@@ -22,6 +22,13 @@ where the file lives on the site.
 
 ## Install / build
 
+Prebuilt binaries for Linux, macOS, and Windows (amd64 and arm64) are attached
+to each [GitHub release](https://github.com/catdevman/webscour/releases) —
+download the archive for your platform, extract it, and run the `webscour`
+binary.
+
+To build from source instead:
+
 ```sh
 go build -o webscour ./...
 ```

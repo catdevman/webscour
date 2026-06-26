@@ -1,0 +1,47 @@
+version: 2
+
+project_name: webscour
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+archives:
+  - formats:
+      - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    # Windows users expect zips rather than tarballs.
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+release:
+  replace_existing_artifacts: true
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - Merge pull request
+      - Merge branch
