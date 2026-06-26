@@ -49,6 +49,22 @@ go build -o webscour ./...
 | `-out`     | `downloads`            | Output directory.                                      |
 | `-ua`      | `webscour/1.0 …`       | User-Agent header and robots.txt agent token.          |
 | `-timeout` | `30s`                  | Per-request HTTP timeout.                              |
+| `-version` | _(off)_                | Print version information and exit.                    |
+
+## Version
+
+Check the installed version with:
+
+```sh
+./webscour -version
+# webscour v0.0.1 (commit abc1234, built 2026-06-25T00:00:00Z)
+```
+
+Release builds embed the version, git commit, and build date (injected at build
+time via `-ldflags`); source builds report `dev`. Releases are tagged `vX.Y.Z`
+following [semantic versioning](https://semver.org/); pushing a tag publishes
+the cross-platform binaries — see the
+[releases page](https://github.com/catdevman/webscour/releases).
 
 ## Output layout
 
