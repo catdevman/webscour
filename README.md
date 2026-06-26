@@ -27,7 +27,28 @@ to each [GitHub release](https://github.com/catdevman/webscour/releases) —
 download the archive for your platform, extract it, and run the `webscour`
 binary.
 
-To build from source instead:
+### Download example (Linux/macOS)
+
+Pick the archive matching your OS/arch (`webscour_<os>_<arch>.tar.gz`), then:
+
+```sh
+# Linux amd64 — adjust os/arch and version to taste
+curl -L -o webscour.tar.gz \
+  https://github.com/catdevman/webscour/releases/download/v0.0.2/webscour_linux_amd64.tar.gz
+
+tar xzf webscour.tar.gz                 # extracts the webscour binary
+sudo install webscour /usr/local/bin/   # put it on your PATH
+webscour -version                       # webscour 0.0.2 (commit …, built …)
+```
+
+On Windows, download `webscour_windows_<arch>.zip`, unzip it, and run
+`webscour.exe`.
+
+> Tip: each release also ships `checksums.txt`. Verify your download with
+> `sha256sum -c checksums.txt` (Linux) or `shasum -a 256 -c checksums.txt`
+> (macOS) from the directory containing the archive.
+
+### Build from source
 
 ```sh
 go build -o webscour ./...
